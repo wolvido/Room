@@ -1,6 +1,17 @@
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera( 945, window.innerWidth / window.innerHeight, 0.1, 1000 );
+var loader = new THREE.GLTFLoader();
 
+loader.load( 'models/scene.gltf', function ( gltf ) {
+
+	scene.add( gltf.scene );
+
+}, undefined, function ( error ) {
+
+	console.error( error );
+
+} );
+let stars, starGeo;
 //textures
 
 var textureWindow = new THREE.TextureLoader().load('textures/window.jpg')
@@ -23,6 +34,8 @@ var textureGod = new THREE.TextureLoader().load('textures/milosGod.jpg');
 var texturePortal = new THREE.TextureLoader().load('textures/portal.png');
 
 //material
+var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+
 
 const dresserMaterials =  [
 new THREE.MeshPhongMaterial( { map: textureDresserFront}),
@@ -48,6 +61,9 @@ var materialPlywood = new THREE.MeshPhongMaterial( {map: texturePlywood});
 
 //geometry 
 
+var geometry = new THREE.CylinderGeometry( 12, 12, 20, 32 );
+
+
 const windowGeom = new THREE.BoxBufferGeometry(2, 20, 20);
 const DresserGeom = new THREE.BoxBufferGeometry(20, 15,30);
 const planeGeometry = new THREE.PlaneGeometry( 2000, 2000, 999);
@@ -69,6 +85,11 @@ scene.add(light);
 scene.add(light.target);
 
 //Shapes
+var cylinder = new THREE.Mesh( geometry, material );
+
+
+
+
 var dresser= new THREE.Mesh(DresserGeom, dresserMaterials);
 
 var windows= new THREE.Mesh(windowGeom, materialWindow);
@@ -91,9 +112,35 @@ var woodenWall2 = new THREE.Mesh( woodWallGeom, materialWoodenWall);
 var woodenWall3 = new THREE.Mesh( woodWallGeom, materialWoodenWall);
 var woodenWall4 = new THREE.Mesh( woodWallGeom, materialWoodenWall);
 
-var kisame = new THREE.Mesh( kisameGeom, materialPlywood);
+var kisame = new THREE.Mesh( kisameGeom, materialPlywood, cylinder);
 
-scene.add(windows2, windows, dresser ,woodWallHalf4 ,woodWallHalf3 ,woodWallHalf,woodWallHalf2, kisame,portal,plane, woodenFloor,woodenWall,Door, HayBed, woodenWall2, woodenWall3, woodenWall4);
+//rain
+
+starGeo = new THREE.Geometry();
+  for(let i=0;i<6000;i++) {
+    star = new THREE.Vector3(
+      Math.random() * 600 - 300,
+      Math.random() * 600 - 300,
+      Math.random() * 600 - 300
+    );
+    star.velocity = 0;
+    star.acceleration = 0.02;
+    starGeo.vertices.push(star);
+  }
+  
+  let sprite = new THREE.TextureLoader().load( 'textures/rain.png' );
+
+  let starMaterial = new THREE.PointsMaterial({
+    color: 0xaaaaaa,
+    size: 0.7,
+    map: sprite
+  });
+  var cylinder2 = new THREE.Mesh( geometry, starMaterial);
+  stars = new THREE.Points(starGeo,starMaterial);
+
+//
+
+scene.add(cylinder, cylinder2, stars,windows2, windows, dresser ,woodWallHalf4 ,woodWallHalf3 ,woodWallHalf,woodWallHalf2, kisame,portal,plane, woodenFloor,woodenWall,Door, HayBed, woodenWall2, woodenWall3, woodenWall4);
 
 //Backgrounds
 scene.background = (textureSky);
@@ -114,6 +161,25 @@ controls = new THREE.OrbitControls( camera,renderer.domElement);
 function animate() {
    requestAnimationFrame( animate );
 
+  starGeo.vertices.forEach(p => {
+    p.velocity += p.acceleration
+    p.z -= p.velocity;
+    
+    if (p.z < -200) {
+      p.z = 200;
+      p.velocity = 0;
+    }
+  });
+  starGeo.verticesNeedUpdate = true;
+  stars.rotation.x = 1;
+
+  //
+  cylinder.position.y = -55
+  cylinder.position.x = 30
+
+  cylinder2.position.y -= .09
+  cylinder2.position.x = 30
+//
    dresser.position.y = -10
    dresser.position.x = -35
    dresser.position.z = -30
@@ -217,3 +283,88 @@ function animate() {
 
 animate();
 
+// let scene, camera, renderer, stars, starGeo;
+
+
+
+// function init() {
+
+//   scene = new THREE.Scene();
+
+//   camera = new THREE.PerspectiveCamera(60,window.innerWidth / window.innerHeight, 1, 1000);
+//   camera.position.z = 1;
+//   camera.rotation.x = 0;
+
+//   renderer = new THREE.WebGLRenderer();
+//   renderer.setSize(window.innerWidth, window.innerHeight);
+//   document.body.appendChild(renderer.domElement);
+
+
+
+
+//   starGeo = new THREE.Geometry();
+//   for(let i=0;i<6000;i++) {
+//     star = new THREE.Vector3(
+//       Math.random() * 600 - 300,
+//       Math.random() * 600 - 300,
+//       Math.random() * 600 - 300
+//     );
+//     star.velocity = 0;
+//     star.acceleration = 0.02;
+//     starGeo.vertices.push(star);
+//   }
+  
+//   let sprite = new THREE.TextureLoader().load( 'star.png' );
+
+//   let starMaterial = new THREE.PointsMaterial({
+//     color: 0xaaaaaa,
+//     size: 0.7,
+//     map: sprite
+//   });
+
+//   stars = new THREE.Points(starGeo,starMaterial);
+
+
+//   scene.add(stars);
+
+//   window.addEventListener("resize", onWindowResize, false);
+
+//   animate(); 
+// }
+
+
+
+
+
+
+// function onWindowResize() {
+//     camera.aspect = window.innerWidth / window.innerHeight;
+//     camera.updateProjectionMatrix();
+//     renderer.setSize(window.innerWidth, window.innerHeight);
+ 
+    
+//   }
+
+
+
+
+
+
+// function animate() {
+//   starGeo.vertices.forEach(p => {
+//     p.velocity += p.acceleration
+//     p.y -= p.velocity;
+    
+//     if (p.y < -200) {
+//       p.y = 200;
+//       p.velocity = 0;
+//     }
+//   });
+//   starGeo.verticesNeedUpdate = true;
+//   stars.rotation.y +=0.002;
+
+
+//   renderer.render(scene, camera);
+//   requestAnimationFrame(animate);
+// }
+// init();
